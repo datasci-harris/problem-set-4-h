@@ -1,5 +1,5 @@
 ---
-title: "Your Title"
+title: "Problem Set 4"
 format: 
   pdf:
     keep-tex: true
@@ -27,10 +27,10 @@ Please refer to the minilesson on code style
 ## Submission Steps (10 pts)
 1. This problem set is a paired problem set.
 2. Play paper, scissors, rock to determine who goes first. Call that person *Partner 1*.
-    - Partner 1 (name and cnet ID):
-    - Partner 2 (name and cnet ID):
+    - Partner 1 (name and cnet ID): Sitong Guo (rehinkerg)
+    - Partner 2 (name and cnet ID): Hailun Liu (hailunl)
 3. Partner 1 will accept the `ps4` and then share the link it creates with their partner. You can only share it with one partner so you will not be able to change it after your partner has accepted. 
-4. "This submission is our work alone and complies with the 30538 integrity policy." Add your initials to indicate your agreement: \*\*\_\_\*\* \*\*\_\_\*\*
+4. "This submission is our work alone and complies with the 30538 integrity policy." Add your initials to indicate your agreement: \*\*SG\*\* \*\*\_\_\*\*
 5. "I have uploaded the names of anyone else other than my partner and I worked with on the problem set **[here](https://docs.google.com/forms/d/185usrCREQaUbvAXpWhChkjghdGgmAZXA3lPWpXLLsts/edit)**"  (1 point)
 6. Late coins used this pset: \*\*\_\_\*\* Late coins left after submission: \*\*\_\_\*\*
 7. Knit your `ps4.qmd` to an PDF file to make `ps4.pdf`, 
@@ -44,13 +44,105 @@ Please refer to the minilesson on code style
 ## Download and explore the Provider of Services (POS) file (10 pts)
 
 1. 
+PRVDR_CTGRY_SBTYP_CD(Provider Category Subtype Code), 
+PRVDR_CTGRY_CD(Provider Category Code), 
+FAC_NAME(Facility Name), 
+PRVDR_NUM(CMS Certification Number), 
+PGM_TRMNTN_CD(Termination Code), 
+ZIP_CD(Address: ZIP Code).
+
 2. 
     a.
+    The file documented 7245 short term hospitals in 2016. This is likely to be 
+    overestimated for the acting quantity since that there is fraction of non-operating 
+    ones included. 
+    ```{python}
+    import pandas as pd
+    
+    pos2016 = pd.read_csv('E:/pos2016.csv',dtype={'ZIP_CD': str})
+
+    short_term_hospitals = pos2016[(pos2016['PRVDR_CTGRY_CD'] == 1) & (pos2016['PRVDR_CTGRY_SBTYP_CD'] == 1)]
+
+    num_hospitals = short_term_hospitals['PRVDR_NUM'].nunique()
+
+    print(f"Number of short-term hospitals in 2016: {num_hospitals}")
+    ```
+    
     b.
+    According to the KFF, as of Jul 07, 2016, there are nearly 5,000 short-term, acute care 
+    hospitals in the United States. As stated by 2016 CMS Statistics, on the other hand, Medicare 
+    short-term hospital was only 3436. This disvrepancy is due to that the file contains
+    hospitals not acting and there might be other short-term hospitals besides acute care. 
+    (The Number of U.S. Hospitals by Type (Total 5534), FY2016 by American Hospital Association 
+    claimed that there were only 5534 hospitals in total in 2016, this is due to some 
+    inexplicable divergences on statistical caliber on definition of hospital.) 
+
 3. 
+
+```{python}
+import matplotlib.pyplot as plt
+import altair as alt
+
+pos2017 = pd.read_csv('E:/pos2017.csv',dtype={'ZIP_CD': str})
+pos2018 = pd.read_csv('E:/pos2018.csv', encoding='ISO-8859-1',dtype={'ZIP_CD': str})
+pos2019 = pd.read_csv('E:/pos2019.csv', encoding='ISO-8859-1',dtype={'ZIP_CD': str})
+
+def short_term(df):
+    return df[(df['PRVDR_CTGRY_CD'] == 1) & (df['PRVDR_CTGRY_SBTYP_CD'] == 1)]
+
+short_term_2016 = short_term(pos2016)
+short_term_2017 = short_term(pos2017)
+short_term_2018 = short_term(pos2018)
+short_term_2019 = short_term(pos2019)
+
+short_term_2016['Year'] = 2016
+short_term_2017['Year'] = 2017
+short_term_2018['Year'] = 2018
+short_term_2019['Year'] = 2019
+
+# append
+all_years = pd.concat([short_term_2016, short_term_2017, short_term_2018, short_term_2019])
+
+counts_by_year = all_years['Year'].value_counts().sort_index().reset_index()
+counts_by_year.columns = ['Year', 'Count']
+
+# set range for the y axis
+y_min = counts_by_year['Count'].min() - 10
+y_max = counts_by_year['Count'].max() + 10
+
+alt.Chart(counts_by_year).mark_line(color='lightblue').encode(
+    x=alt.X('Year:O', title='Year'),
+    y=alt.Y('Count:Q', title='Number of Short-Term Hospitals', scale=alt.Scale(domain=[y_min, y_max]))
+).properties(
+    title ='Number of Short-Term Hospital Observations by Year', 
+    height = 400,
+    width = 400  
+)
+```
+
 4. 
     a.
-    b.
+    
+    ```{python}
+    unique_hospitals_per_year = all_years.groupby('Year')['PRVDR_NUM'].nunique().reset_index()
+    unique_hospitals_per_year.columns = ['Year', 'Unique_Count']
+
+    y_min = unique_hospitals_per_year['Unique_Count'].min() - 10
+    y_max = unique_hospitals_per_year['Unique_Count'].max() + 10
+
+    alt.Chart(unique_hospitals_per_year).mark_line(color='coral').encode(
+        x=alt.X('Year:O', title='Year'),
+        y=alt.Y('Unique_Count:Q', title='Number of Unique Short-Term Hospitals', scale=alt.Scale(domain=[y_min, y_max]))
+        ).properties(
+        title ='Number of Unique Short-Term Hospitals per Year',
+        width = 400,
+        height = 400
+    )
+    ```
+    
+    b. 
+    They are identical, which means that the short-term hospitals were each having a unique CCN 
+    without redundancy, in the period of 2016-2019.
 
 ## Identify hospital closures in POS file (15 pts) (*)
 
@@ -58,15 +150,128 @@ Please refer to the minilesson on code style
 2. 
 3. 
     a.
+    ```{python}
+    #hospitals active each year
+    active_2016 = pos2016_subset[pos2016_subset['PGM_TRMNTN_CD_2016'] == 0][['ZIP_CD_2016', 'PRVDR_NUM']]
+    active_2017 = pos2017_subset[pos2017_subset['PGM_TRMNTN_CD_2017'] == 0][['ZIP_CD_2017', 'PRVDR_NUM']]
+    active_2018 = pos2018_subset[pos2018_subset['PGM_TRMNTN_CD_2018'] == 0][['ZIP_CD_2018', 'PRVDR_NUM']]
+    active_2019 = pos2019_subset[pos2019_subset['PGM_TRMNTN_CD_2019'] == 0][['ZIP_CD_2019', 'PRVDR_NUM']]
+
+    # by ZIP each year
+    active_count_2016 = active_2016.groupby('ZIP_CD_2016').size().reset_index(name='ActiveCount_2016')
+    active_count_2017 = active_2017.groupby('ZIP_CD_2017').size().reset_index(name='ActiveCount_2017')
+    active_count_2018 = active_2018.groupby('ZIP_CD_2018').size().reset_index(name='ActiveCount_2018')
+    active_count_2019 = active_2019.groupby('ZIP_CD_2019').size().reset_index(name='ActiveCount_2019')
+
+    active_count_2016 = active_count_2016.rename(columns={'ZIP_CD_2016': 'ZIP_CD'})
+    active_count_2017 = active_count_2017.rename(columns={'ZIP_CD_2017': 'ZIP_CD'})
+    active_count_2018 = active_count_2018.rename(columns={'ZIP_CD_2018': 'ZIP_CD'})
+    active_count_2019 = active_count_2019.rename(columns={'ZIP_CD_2019': 'ZIP_CD'})
+
+    # merge active counts to compare by ZIP
+    zip_counts = active_count_2016.merge(active_count_2017, on='ZIP_CD', how='outer') \
+                                .merge(active_count_2018, on='ZIP_CD', how='outer') \
+                                .merge(active_count_2019, on='ZIP_CD', how='outer')
+
+    suspected = suspected.merge(zip_counts, left_on='ZIP_CD_2016', right_on='ZIP_CD', how='left')
+
+    # number of active did not decrease...questionable
+    suspected['IsMerger'] = np.where(
+        ((suspected['YearOfSuspectedClosure'] == 2017) & (suspected['ActiveCount_2017'] >= suspected['ActiveCount_2016'])) |
+        ((suspected['YearOfSuspectedClosure'] == 2018) & (suspected['ActiveCount_2018'] >= suspected['ActiveCount_2017'])) |
+        ((suspected['YearOfSuspectedClosure'] == 2019) & (suspected['ActiveCount_2019'] >= suspected['ActiveCount_2018'])),
+        True,
+        False
+    )
+
+    #potential merger/acquisition
+    corrected_closures = suspected[~suspected['IsMerger']]
+
+    merger_count = suspected['IsMerger'].sum()
+    print(f"potential mergers/acquisitions: {merger_count}")
+
+    ```
+   
     b.
+    ```{python}
+    #corrected closures
+    corrected_closure_count = corrected_closures['FAC_NAME_2016'].nunique()
+    print(f"hospitals correcting for m/a: {corrected_closure_count}")
+    ```
+    
     c.
+    ```{python}
+    sorted_corrected_closures = corrected_closures.sort_values(by='FAC_NAME_2016')[['FAC_NAME_2016', 'YearOfSuspectedClosure', 'ZIP_CD_2016']]
+    
+    print(sorted_corrected_closures.head(10))
+    ```
 
 ## Download Census zip code shapefile (10 pt) 
 
 1. 
     a.
+    (1).shp (Shape file): Main file that has feature geometrics, such as points, lines, or polygons that represent the shapes of geographic features inclluding ZIP code boundaries.
+    
+    (2).shx (Shape index file) : Contains an positional index of the geometries in the shp file, accelerating access to geographic features.
+    
+    (3).dbf (database file): a tabular file with attribute information, in dBASE format that stores attributes or additional data about each shape in the shp file.
+    
+    (4).prj (projection file): Describes the Coordinate Reference System (CRS). Contains information about the system and projection used in the shp, ensuring that the data aligns correctly with other geographic data.
+
+    (5).xml: Detailed text information about the dataset like source, description, date, attribute definitions, and other information for understanding the data's context and structure.
+
     b. 
+    
+    ```{python}
+    import os
+    directory = 'E:/SeriousBusiness/Applications/uchicago/python2'
+
+    for filename in os.listdir(directory):
+        file_path = os.path.join(directory, filename)
+        if os.path.isfile(file_path):
+            file_size = os.path.getsize(file_path) 
+            print(f"{filename}: {file_size} KB")
+    ```
+
 2. 
+
+```{python}
+import geopandas as gpd
+import pandas as pd
+import matplotlib.pyplot as plt
+
+#number of hospitals per ZIP
+hospitals_per_zip = active_2016.groupby('ZIP_CD_2016').size().reset_index(name='Hospital_Count')
+hospitals_per_zip.columns = ['ZIP_CD', 'Hospital_Count']
+```
+
+```{python}
+
+zip_codes = gpd.read_file('E:/SeriousBusiness/Applications/uchicago/python2/gz_2010_us_860_00_500k.shp')
+```
+```{python}
+#print(zip_codes.columns)
+# Index(['GEO_ID', 'ZCTA5', 'NAME', 'LSAD', 'CENSUSAREA', 'geometry'], dtype='object')
+#Texas
+texas_zip_codes = zip_codes[zip_codes['ZCTA5'].str.startswith(('75', '76', '77', '78', '79'))]
+```
+
+```{python}
+texas_zip_hospitals = texas_zip_codes.merge(hospitals_per_zip, left_on='ZCTA5', right_on='ZIP_CD', how='left')
+
+#fill missing hospital counts with 0!
+texas_zip_hospitals['Hospital_Count'] = texas_zip_hospitals['Hospital_Count'].fillna(0)
+texas_zip_hospitals.head(5)
+```
+
+```{python}
+plt.figure(figsize=(18, 15))
+texas_zip_hospitals.plot(column='Hospital_Count', cmap='Blues', linewidth=0.8, edgecolor='0.8', legend=True)
+plt.title('Number of Hospitals by ZIP in Texas(2016)')
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+plt.show()
+```
 
 ## Calculate zip code’s distance to the nearest hospital (20 pts) (*)
 
@@ -84,8 +289,117 @@ Please refer to the minilesson on code style
 ## Effects of closures on access in Texas (15 pts)
 
 1. 
+
+```{python}
+texas_closures = sorted_corrected_closures[sorted_corrected_closures['ZIP_CD_2016'].str.startswith(('75', '76', '77', '78', '79'))]
+
+closures_by_zip = texas_closures.groupby('ZIP_CD_2016').size().reset_index(name='Number_of_Closures')
+
+closures_by_zip.columns = ['ZIP Code', 'Number of Closures']
+
+print(closures_by_zip)
+```
+
 2. 
+
+```{python}
+texas_zip_closures = texas_zip_codes.merge(closures_by_zip, left_on='ZCTA5', right_on='ZIP Code', how='left')
+
+#Fill nan with 0..
+texas_zip_closures['Number of Closures'] = texas_zip_closures['Number of Closures'].fillna(0)
+
+affected_zip_count = texas_zip_closures[texas_zip_closures['Number of Closures'] > 0]['ZCTA5'].nunique()
+print(f"Directly affected ZIPs in Texas: {affected_zip_count}")
+
+plt.figure(figsize=(12, 10))
+texas_zip_closures.plot(column='Number of Closures', cmap='OrRd', linewidth=0.8, edgecolor='0.8', legend=True)
+plt.title('Texas ZIP Affected by Hospital Closure(2016-2019)')
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+plt.show()
+```
+
 3. 
+
+```{python}
+# 16093.44 meters
+
+directly_affected_zips = texas_zip_closures[texas_zip_closures['Number of Closures'] > 0]
+'''
+ IMPORTANT!: print(directly_affected_zips.crs) to see the CRS! IT IS NOT METER.
+'''
+directly_affected_zips = directly_affected_zips.to_crs("EPSG:3083")
+texas_zip_codes = texas_zip_codes.to_crs("EPSG:3083")
+
+# seems like this question doesn't need buffer around centroid.
+'''
+directly_affected_zips['centroid'] = directly_affected_zips.geometry.centroid
+directly_affected_zips['buffer'] = directly_affected_zips['centroid'].buffer(16093.4)  
+directly_affected_zips.set_geometry('buffer', inplace=True)
+'''
+directly_affected_zips['geometry'] = directly_affected_zips.geometry.buffer(16093.4)
+
+affected_zips = gpd.sjoin(texas_zip_codes, directly_affected_zips, how='inner', predicate='intersects')
+
+# sift out those directly; Must use ZCTA5_left, since the zcta5_right and ZIP Code is introduced from directly_affected table by the joins intersect, thus don't comprise those in the buffer!
+indirectly_affected_zips = affected_zips[~affected_zips['ZCTA5_left'].isin(directly_affected_zips['ZCTA5'])]
+
+indirect_zip_count = indirectly_affected_zips['ZCTA5_left'].nunique()
+print("Number of indirectly affected ZIP codes:", indirect_zip_count)
+```
+```{python}
+print(affected_zips.columns)
+'''
+Index(['GEO_ID_left', 'ZCTA5_left', 'NAME_left', 'LSAD_left',
+       'CENSUSAREA_left', 'geometry', 'index_right', 'GEO_ID_right',
+       'ZCTA5_right', 'NAME_right', 'LSAD_right', 'CENSUSAREA_right',
+       'ZIP Code', 'Number of Closures'],
+      dtype='object')
+'''
+```
+
+```{python}
+# buffered areas
+fig, ax = plt.subplots(figsize=(10, 10))
+texas_zip_codes.plot(ax=ax, color='lightgrey', edgecolor='black')
+directly_affected_zips.plot(ax=ax, color='red', alpha=0.5)
+plt.title("10-Mile Buffers Around Directly Affected ZIP Codes")
+plt.show()
+```
+
 4. 
 
+```{python}
+def categorize_zip(zip):
+    if zip['ZCTA5'] in directly_affected_zips['ZIP Code'].values:
+        return 'Directly Affected'
+    elif zip['ZCTA5'] in indirectly_affected_zips['ZCTA5_left'].values:
+        return 'Indirectly Affected'
+    else:
+        return 'Not Affected'
+
+# apply function onto dataframe, use .apply(func, axis=1): 
+texas_zip_codes['Category'] = texas_zip_codes.apply(categorize_zip, axis=1)
+
+color_mapping = {
+    'Directly Affected': 'red',
+    'Indirectly Affected': 'gold',
+    'Not Affected': 'lightgreen'
+}
+
+texas_zip_codes['Color'] = texas_zip_codes['Category'].map(color_mapping)
+
+fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+texas_zip_codes.plot(ax=ax, color=texas_zip_codes['Color'], edgecolor='black')
+ax.set_title('Texas ZIP Codes Affected by Closures')
+plt.show()
+```
+
 ## Reflecting on the exercise (10 pts) 
+(1)The “first-pass” method we’re using to address incorrectly identified closures in the data is imperfect. Can you think of some potential issues that could arise still and ways to do a better job at confirming hospital closures?
+
+A: This is indeed doubtable. We are given the knowledge that when a TorF closure takes place, that will be reflected in the year's file. Thus, for an actual closure, 
+the number of active hospital next year shall remain unaltered, and for false closure(merger/acquisition), the number next year should rise by 1. This indicates that the 
+"non-decrease" criteria will fail to winnow out the false closures, they are all non-decrease! In a nutshell, the number we calculated in section2 is still the 
+aggregate number of those 'simply non-active shown by termination code'. 
+A remedy could be changing from 'not decrease' to 'increase', or sifting out those with more than 1 unique CMS number in the four years.
