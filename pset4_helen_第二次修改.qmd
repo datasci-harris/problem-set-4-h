@@ -1,0 +1,451 @@
+---
+title: "PS4"
+author: "HL"
+date: "Nov 3 2024"
+format: 
+  html: 
+    code-overlap: wrap
+execute:
+  eval: true
+  echo: true
+---
+
+**PS4:** Due Sat Nov 2 at 5:00PM Central. Worth 100 points. 
+We use (`*`) to indicate a problem that we think might be time consuming. 
+    
+## Style Points (10 pts) 
+Please refer to the minilesson on code style
+**[here](https://uchicago.zoom.us/rec/share/pG_wQ-pHTQrJTmqNn4rcrw5V194M2H2s-2jdy8oVhWHkd_yZt9o162IWurpA-fxU.BIQlSgZLRYctvzp-)**.
+
+## Submission Steps (10 pts)
+1. This problem set is a paired problem set.
+2. Play paper, scissors, rock to determine who goes first. Call that person *Partner 1*.
+    - Partner 1 (name and cnet ID):
+    - Partner 2 (name and cnet ID):Helen Liu(hailunl)
+3. Partner 1 will accept the `ps4` and then share the link it creates with their partner. You can only share it with one partner so you will not be able to change it after your partner has accepted. 
+4. "This submission is our work alone and complies with the 30538 integrity policy." Add your initials to indicate your agreement: **HL**  **ST** 
+5. "I have uploaded the names of anyone else other than my partner and I worked with on the problem set **[here](https://docs.google.com/forms/d/185usrCREQaUbvAXpWhChkjghdGgmAZXA3lPWpXLLsts/edit)**"  (1 point)
+6. Late coins used this pset: \*\*\_\_\*\* Late coins left after submission: \*\*\_\_\*\*
+7. Knit your `ps4.qmd` to an PDF file to make `ps4.pdf`, 
+    * The PDF should not be more than 25 pages. Use `head()` and re-size figures when appropriate. 
+8. (Partner 1): push  `ps4.qmd` and `ps4.pdf` to your github repo.
+9. (Partner 1): submit `ps4.pdf` via Gradescope. Add your partner on Gradescope.
+10. (Partner 1): tag your submission in Gradescope
+
+**Important:** Repositories are for tracking code. **Do not commit the data or shapefiles to your repo.** The best way to do this is with `.gitignore`, which we have covered in class. If you do accidentally commit the data, Github has a [guide](https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-large-files-on-github#removing-files-from-a-repositorys-history). The best course of action depends on whether you have pushed yet. This also means that both partners will have to download the initial raw data and any data cleaning code will need to be re-run on both partners' computers. 
+
+## Download and explore the Provider of Services (POS) file (10 pts)
+
+1. 
+2. 
+    a.
+    b.
+3. 
+4. 
+    a.
+    b.
+
+## Identify hospital closures in POS file (15 pts) (*)
+
+```{python}
+import pandas as pd
+################################################
+pos2016 = pd.read_csv('/Users/liuhailun/Desktop/gst/POS_File_Hospital_Non_Hospital_Facilities_Q4_2016.csv')
+################################################
+```
+
+```{python}
+import pandas as pd
+################################################
+pos2017 = pd.read_csv('/Users/liuhailun/Desktop/gst/POS_File_Hospital_Non_Hospital_Facilities_Q4_2017.csv', encoding='ISO-8859-1' )
+pos2018 = pd.read_csv('/Users/liuhailun/Desktop/gst/POS_File_Hospital_Non_Hospital_Facilities_Q4_2018.csv', encoding='ISO-8859-1')
+pos2019 = pd.read_csv('/Users/liuhailun/Desktop/gst/POS_File_Hospital_Non_Hospital_Facilities_Q4_2019.csv',encoding='ISO-8859-1')
+################################################
+```
+
+
+```{python}
+pos2016 = pos2016[pos2016['PRVDR_CTGRY_CD'] == 1]
+pos2016 = pos2016[pos2016['PRVDR_CTGRY_SBTYP_CD'] == 1]
+pos2017=pos2017[pos2017['PRVDR_CTGRY_CD'] == 1]
+pos2017=pos2017[pos2017['PRVDR_CTGRY_SBTYP_CD'] == 1]
+pos2018=pos2018[pos2018['PRVDR_CTGRY_CD'] == 1]
+pos2018=pos2018[pos2018['PRVDR_CTGRY_SBTYP_CD'] == 1]
+pos2019=pos2019[pos2019['PRVDR_CTGRY_CD'] == 1]
+pos2019=pos2019[pos2019['PRVDR_CTGRY_SBTYP_CD'] == 1]
+```
+
+
+
+1. There are 174 hospital that fit this definition( hospitals that were active in 2016 that were suspected to have closed by 2019)
+
+
+```{python}
+pos2016_subset = pos2016[['FAC_NAME', 'PRVDR_NUM', 'PGM_TRMNTN_CD', 'ZIP_CD']]
+pos2017_subset = pos2017[['FAC_NAME', 'PRVDR_NUM', 'PGM_TRMNTN_CD', 'ZIP_CD']]
+pos2018_subset = pos2018[['FAC_NAME', 'PRVDR_NUM', 'PGM_TRMNTN_CD', 'ZIP_CD']]
+pos2019_subset = pos2019[['FAC_NAME', 'PRVDR_NUM', 'PGM_TRMNTN_CD', 'ZIP_CD']]
+
+pos2016_subset = pos2016_subset.add_suffix('_2016').rename(columns={'PRVDR_NUM_2016': 'PRVDR_NUM'})
+pos2017_subset = pos2017_subset.add_suffix('_2017').rename(columns={'PRVDR_NUM_2017': 'PRVDR_NUM'})
+pos2018_subset = pos2018_subset.add_suffix('_2018').rename(columns={'PRVDR_NUM_2018': 'PRVDR_NUM'})
+pos2019_subset = pos2019_subset.add_suffix('_2019').rename(columns={'PRVDR_NUM_2019': 'PRVDR_NUM'})
+
+merged = pos2016_subset.merge(pos2017_subset, on='PRVDR_NUM', how='outer') \
+                            .merge(pos2018_subset, on='PRVDR_NUM', how='outer') \
+                            .merge(pos2019_subset, on='PRVDR_NUM', how='outer')
+```
+
+```{python}
+pos2016_s = pos2016[['FAC_NAME', 'PRVDR_NUM', 'PGM_TRMNTN_CD', 'ZIP_CD']]
+pos2017_s = pos2017[['FAC_NAME', 'PRVDR_NUM', 'PGM_TRMNTN_CD', 'ZIP_CD']]
+pos2018_s = pos2018[['FAC_NAME', 'PRVDR_NUM', 'PGM_TRMNTN_CD', 'ZIP_CD']]
+pos2019_s = pos2019[['FAC_NAME', 'PRVDR_NUM', 'PGM_TRMNTN_CD', 'ZIP_CD']]
+
+pos2016_s = pos2016_s.add_suffix('_2016').rename(columns={'FAC_NAME_2016': 'FAC_NAME'})
+pos2017_s = pos2017_s.add_suffix('_2017').rename(columns={'FAC_NAME_2017': 'FAC_NAME'})
+pos2018_s = pos2018_s.add_suffix('_2018').rename(columns={'FAC_NAME_2018': 'FAC_NAME'})
+pos2019_s = pos2019_s.add_suffix('_2019').rename(columns={'FAC_NAME_2019': 'FAC_NAME'})
+
+merged1 = pos2016_s.merge(pos2017_s, on='FAC_NAME', how='outer') \
+                   .merge(pos2018_s, on='FAC_NAME', how='outer') \
+                   .merge(pos2019_s, on='FAC_NAME', how='outer')
+
+```
+
+```{python}
+merged_2016_0 = merged[merged['PGM_TRMNTN_CD_2016'] == 0]
+```
+
+```{python}
+suspected = merged_2016_0[
+    ~((merged_2016_0['PGM_TRMNTN_CD_2016'] == 0) & 
+      (merged_2016_0['PGM_TRMNTN_CD_2017'] == 0) & 
+      (merged_2016_0['PGM_TRMNTN_CD_2018'] == 0) & 
+      (merged_2016_0['PGM_TRMNTN_CD_2019'] == 0))
+]
+suspected = suspected[['PRVDR_NUM', 'FAC_NAME_2016', 'ZIP_CD_2016', 'PGM_TRMNTN_CD_2016', 'PGM_TRMNTN_CD_2017', 'PGM_TRMNTN_CD_2018', 'PGM_TRMNTN_CD_2019']]
+
+count = suspected['FAC_NAME_2016'].unique()
+number = len(count)
+```
+
+```{python}
+import numpy as np
+conditions = [
+    (suspected['PGM_TRMNTN_CD_2017'] != 0) & (suspected['PGM_TRMNTN_CD_2018'] != 0) & (suspected['PGM_TRMNTN_CD_2019'] != 0),
+    (suspected['PGM_TRMNTN_CD_2017'] == 0) & (suspected['PGM_TRMNTN_CD_2018'] != 0) & (suspected['PGM_TRMNTN_CD_2019'] != 0),
+    (suspected['PGM_TRMNTN_CD_2017'] == 0) & (suspected['PGM_TRMNTN_CD_2018'] == 0) & (suspected['PGM_TRMNTN_CD_2019'] != 0)
+]
+choices = [2017, 2018, 2019]
+suspected['YearOfSuspectedClosure'] = np.select(conditions, choices, default=np.nan)
+
+```
+
+2. 
+
+```{python}
+sorted_suspected = suspected.sort_values(by='FAC_NAME_2016')[['FAC_NAME_2016', 'YearOfSuspectedClosure','ZIP_CD_2016']]
+
+top_10_hospitals = sorted_suspected.head(10)
+print(top_10_hospitals)
+```
+
+3. 
+```{python}
+df_na = merged1[merged1.isna().any(axis=1)]
+```
+
+```{python}
+df_na.loc[df_na['ZIP_CD_2016'].isna() & df_na['ZIP_CD_2017'].notna(), 'ZIP_CD_2016'] = df_na['ZIP_CD_2017']
+```
+
+```{python}
+df_na.loc[df_na['ZIP_CD_2016'].isna() & df_na['ZIP_CD_2018'].notna(), 'ZIP_CD_2016'] = df_na['ZIP_CD_2018']
+```
+
+```{python}
+df_na.loc[df_na['ZIP_CD_2016'].isna() & df_na['ZIP_CD_2019'].notna(), 'ZIP_CD_2016'] = df_na['ZIP_CD_2019']
+```
+
+```{python}
+sus1 = suspected[['ZIP_CD_2016']].copy()
+sus = sus1.groupby('ZIP_CD_2016').size().reset_index(name='count')
+```
+
+```{python}
+zip_cd_range = sus['ZIP_CD_2016'].unique()
+```
+```{python}
+mmm = df_na[df_na['ZIP_CD_2016'].isin(zip_cd_range)]
+```
+```{python}
+mmm.loc[mmm['PRVDR_NUM_2016'].isna() & mmm['PRVDR_NUM_2017'].notna(), 'PRVDR_NUM_2016'] = mmm['PRVDR_NUM_2017']
+```
+```{python}
+mmm.loc[mmm['PRVDR_NUM_2016'].isna() & mmm['PRVDR_NUM_2018'].notna(), 'PRVDR_NUM_2016'] = mmm['PRVDR_NUM_2018']
+```
+```{python}
+mmm.loc[mmm['PRVDR_NUM_2016'].isna() & mmm['PRVDR_NUM_2019'].notna(), 'PRVDR_NUM_2016'] = mmm['PRVDR_NUM_2019']
+```
+```{python}
+mmm = mmm[['FAC_NAME', 'ZIP_CD_2016','PRVDR_NUM_2016', 'PGM_TRMNTN_CD_2016', 'PGM_TRMNTN_CD_2017', 'PGM_TRMNTN_CD_2018', 'PGM_TRMNTN_CD_2019']]
+```
+
+
+```{python}
+suspected['ZIP_CD_2016'] = suspected['ZIP_CD_2016'].astype(str)
+fake_closure = suspected[suspected['ZIP_CD_2016'].isin(['928.0', '33136.0', '40977.0', '45417.0', '53097.0', '75601.0', '93230.0'])]
+true_closure = suspected[~suspected['PRVDR_NUM'].isin(['050196', '100009', '180021', '360274', '400121', '450037', '520195'])]
+```
+
+a.
+Among the suspected closures, there are 7 hospitals which is fitting this definition of potentially being a merger/acquisition
+
+b.
+After correcting for this, only 167 hospitals have left, indicating the true closure.
+
+c.
+```{python}
+sorted_true_closure = true_closure.sort_values(by='FAC_NAME_2016').head(10)
+print(sorted_true_closure)
+```
+
+
+## Download Census zip code shapefile (10 pt) 
+
+1. 
+    a.
+    b. 
+2. 
+
+
+## Calculate zip code’s distance to the nearest hospital (20 pts) (*)
+```{python}
+################################################
+import geopandas as gpd
+filepath1 = "/Users/liuhailun/Desktop/gz_2010_us_860_00_500k/gz_2010_us_860_00_500k.shp"
+################################################
+shp = gpd.read_file(filepath1)
+```
+
+
+```{python}
+################################################
+filepath2 = "/Users/liuhailun/Desktop/gz_2010_us_860_00_500k/gz_2010_us_860_00_500k.shx"
+shx = gpd.read_file(filepath2)
+################################################
+```
+
+```{python}
+zips_all_centroids = shp.copy()
+zips_all_centroids['geometry'] = shp.geometry.centroid
+```
+1. Dimensions:
+The dimensions output from the GeoDataFramel created for the centroid of each zip code nationally gives the number of rows and columns which is equal
+to the number of unique ZIP codes in the data.
+Each row represents a unique ZIP Code area, and the columns represent the .
+The coordinate position of the centroids(each ZIP Code).
+
+Columns meaning:
+1.GEO_ID: A unique identifier for each geographic region, helping to distinguish each ZIP Code area.
+2.ZCTA5:This is the 5-digit ZIP Code Tabulation Area (ZCTA), a representation of ZIP Code regions used in census data.
+3.NAME: Typically represents the ZIP Code for the area.
+4.LSAD: Legal/Statistical Area Description, identifying the type of area, such as city or rural.
+5.geometry: Contains the centroid point of each ZIP Code area.This is a Point geometry representing the geometric center of each ZIP Code area.
+
+
+
+2. 
+In subsets of zips_texas_centroids,there are 1935 unique zip codes.
+In subsets of zips_texas_borderstates_centroids,there are 4057 unique zip codes.
+
+```{python}
+import geopandas as gpd
+zips_all_centroids['ZIP_INT'] = zips_all_centroids['ZCTA5'].astype(int)
+texas_condition = (
+    (zips_all_centroids['ZIP_INT'] >= 75000) & (zips_all_centroids['ZIP_INT'] <= 79999)
+)
+```
+
+```{python}
+border_states_condition = (
+    ((zips_all_centroids['ZIP_INT'] >= 87000) & (zips_all_centroids['ZIP_INT'] <= 88499)) |  
+    ((zips_all_centroids['ZIP_INT'] >= 70000) & (zips_all_centroids['ZIP_INT'] <= 72999)) |  
+    ((zips_all_centroids['ZIP_INT'] >= 73000) & (zips_all_centroids['ZIP_INT'] <= 79999))   
+)
+zips_texas_centroids = zips_all_centroids[texas_condition]
+zips_texas_borderstates_centroids = zips_all_centroids[texas_condition | border_states_condition]
+unique_texas_zips = zips_texas_centroids['ZCTA5'].nunique()
+unique_texas_border_zips = zips_texas_borderstates_centroids['ZCTA5'].nunique()
+print("Unique ZIP Codes in Texas:", unique_texas_zips)
+print("Unique ZIP Codes in Texas and bordering states:", unique_texas_border_zips)
+```
+
+3. 
+There are 448 rows in zips_withhospital_centroids .
+
+We’ll use an inner join since we only want the zip codes that appear in both datasets (those in zips_texas_borderstates_centroids that are also in merged_gdf).The merge will be based on the zip code column, typically named something like 'ZIP_CD_2016' in both GeoDataFrames. Ensure both columns are named consistently for the merge.
+```{python}
+################################################
+filepath3 = "/Users/liuhailun/Desktop/gz_2010_us_860_00_500k/gz_2010_us_860_00_500k.dbf"
+dbf = gpd.read_file(filepath3)
+################################################
+
+```
+
+
+```{python}
+merged_2016_0['ZIP_INT'] = pd.to_numeric(merged_2016_0['ZIP_CD_2016'], errors='coerce')
+border_states_condition = (
+    ((merged_2016_0['ZIP_INT'] >= 87000) & (merged_2016_0['ZIP_INT'] <= 88499)) | 
+    ((merged_2016_0['ZIP_INT'] >= 70000) & (merged_2016_0['ZIP_INT'] <= 72999)) |  
+    ((merged_2016_0['ZIP_INT'] >= 73000) & (merged_2016_0['ZIP_INT'] <= 79999))    
+)
+border_states_hopital_2016 = merged_2016_0[border_states_condition]
+border_states_hopital_2016 = border_states_hopital_2016.drop(columns=['ZIP_INT'])
+```
+
+```{python}
+texas_borderstates_hopital = border_states_hopital_2016.groupby('ZIP_CD_2016').size().reset_index(name='COUNT')
+```
+
+
+```{python}
+texas_borderstates_hopital['ZIP_CD_2016'] = texas_borderstates_hopital['ZIP_CD_2016'].astype(int)
+texas_borderstates_hopital['ZIP_CD_2016'] = texas_borderstates_hopital['ZIP_CD_2016'].astype(str)
+```
+```{python}
+
+df = pd.DataFrame(zips_texas_borderstates_centroids.drop(columns='geometry'))
+df = df.rename(columns={'ZCTA5': 'ZIP_CD_2016'})
+df['ZIP_CD_2016'].astype(str)
+```
+```{python}
+merged_gdf = df.merge(
+    texas_borderstates_hopital, 
+    on='ZIP_CD_2016',  
+    how='right' 
+)
+print(f"There are {len(merged_gdf)} rows in zips_withhospital_centroids .")
+```
+```{python}
+zips_withhospital_centroids = gpd.GeoDataFrame(merged_gdf)
+```
+
+4. 
+    a.It will take about 0.0099 seconds for subset to 10 zip codes.And the whole process will take about 1.93 seconds.
+
+```{python}
+import geopandas as gpd
+import time
+################################################
+filepath1 = "/Users/liuhailun/Desktop/gz_2010_us_860_00_500k/gz_2010_us_860_00_500k.shp"
+shp = gpd.read_file(filepath1)
+################################################
+zips_texas_centroids = shp[shp['ZCTA5'].astype(str).str[:2].isin(['75', '76', '77', '78', '79'])]
+zips_withhospital_centroids = shp[shp['ZCTA5'].isin(merged_gdf['ZIP_CD_2016'])]
+
+###checkcheckcheckcheckcheck
+zips_texas_centroids['geometry'] = zips_texas_centroids.geometry.centroid
+zips_withhospital_centroids['geometry'] = zips_withhospital_centroids.geometry.centroid
+###checkcheckcheckcheckcheck
+
+zips_texas_subset = zips_texas_centroids.head(10)
+start_time = time.time()
+subset_join_result = gpd.sjoin_nearest(
+    zips_texas_subset,
+    zips_withhospital_centroids,
+    how="inner",
+    distance_col="distance"
+)
+time_taken = time.time() - start_time
+subset_join_result, time_taken
+
+```
+
+b.As for the full calculation,it takes about 0.07 seconds,which is faster than l estimated.
+```{python}
+zips_texas_centroids = zips_texas_centroids.to_crs(epsg=3857)
+zips_withhospital_centroids = zips_withhospital_centroids.to_crs(epsg=3857)
+start_time = time.time()
+subset_join_result = gpd.sjoin_nearest(
+    zips_texas_centroids,
+    zips_withhospital_centroids,
+    how="inner",
+    distance_col="distance"
+)
+time_taken = time.time() - start_time
+subset_join_result, time_taken
+
+
+```
+
+
+c.
+The .prj file specifies that the unit is in "Degree" (angular unit)
+In this context, "Degree" represents degrees of latitude and longitude.
+On the Earth's surface, 1 degree of latitude is approximately equal to 69 miles.
+The distance represented by 1 degree of longitude varies by latitude, but in mid-latitude regions like the United States, 1 degree of longitude is roughly 53 miles.
+So, the approximate conversions are:
+
+1 degree of latitude ≈ 69 miles
+1 degree of longitude ≈ 53 miles (suitable for mid-latitude areas in the U.S.)
+```{python}
+from pyproj import CRS
+prj_file = "/Users/liuhailun/Desktop/gz_2010_us_860_00_500k/gz_2010_us_860_00_500k.prj"
+with open(prj_file, 'r') as file:
+    prj_text = file.read()
+crs = CRS.from_wkt(prj_text)
+print(crs)
+
+
+```
+
+
+5. 
+a.
+Unit is inclueded distance.
+```{python}
+subset_join_result = gpd.sjoin_nearest(
+    zips_texas_centroids,
+    zips_withhospital_centroids,
+    how="inner",
+    distance_col="distance"
+)
+```
+
+b. the average distance is 0.21101748566398393.
+the average distance in miles is 14.49miles
+```{python}
+dd = subset_join_result.drop(columns='geometry')
+mean_distance = dd['distance'].mean()
+print(mean_distance)
+```
+
+c.
+```{python}
+
+```
+```{python}
+import matplotlib.pyplot as plt
+subset_join_result.plot(column = 'distance').set_axis_off()
+plt.axis("off")
+
+```
+    
+    
+## Effects of closures on access in Texas (15 pts)
+
+1. 
+2. 
+3. 
+4. 
+
+## Reflecting on the exercise (10 pts) 
+1.
+
+
+
+
+2.When we are identifying zip codes affected by closures,it may have duplicated date if the hopital is merged accross difference zip codes. For the hopital which located near the froniter of a zipcode may happens that sitation. I think the best way to improve this sitation is by identifying the merge hopital with a 'merger_number',which may help us better identify the true closure.Instead of calculating distance alone, measure average travel time to the nearest hospital, considering public transportation, road quality, and traffic patterns. This would give a more realistic view of accessibility.Adjust the measure to account for population density and demographics. High-population or high-need areas could be weighted more heavily, reflecting a higher demand for healthcare services.
