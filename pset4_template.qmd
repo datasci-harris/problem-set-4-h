@@ -3,20 +3,11 @@ title: "Problem Set 4"
 author: "Sitong Guo, Helen Liu"
 date: "Nov 3 2024"
 format: 
-  pdf:
-    keep-tex: true
-    include-in-header: 
-       text: |
-         \usepackage{fvextra}
-         \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
-include-before-body:
-  text: |
-    \RecustomVerbatimEnvironment{verbatim}{Verbatim}{
-      showspaces = false,
-      showtabs = false,
-      breaksymbolleft={},
-      breaklines
-    }
+  html: 
+    code-overlap: wrap
+execute:
+  eval: true
+  echo: true
 ---
 
 **PS4:** Due Sat Nov 2 at 5:00PM Central. Worth 100 points. 
