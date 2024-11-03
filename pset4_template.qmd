@@ -384,14 +384,20 @@ texas_zip_codes['Category'] = texas_zip_codes.apply(categorize_zip, axis=1)
 color_mapping = {
     'Directly Affected': 'red',
     'Indirectly Affected': 'gold',
-    'Not Affected': 'lightgreen'
+    'Not Affected': 'lightgray'
 }
 
 texas_zip_codes['Color'] = texas_zip_codes['Category'].map(color_mapping)
 
 fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-texas_zip_codes.plot(ax=ax, color=texas_zip_codes['Color'], edgecolor='black')
+texas_zip_codes.plot(ax=ax, color=texas_zip_codes['Color'], edgecolor='gray',legend = True) #simply adding 'legend = true' when setting colors based on a non-numeric, manually defined Color column cannot work. 
 ax.set_title('Texas ZIP Codes Affected by Closures')
+
+#legend with custom patches
+import matplotlib.patches as mpatches
+legend_patches = [mpatches.Patch(color=color, label=label) for label, color in color_mapping.items()]
+ax.legend(handles=legend_patches, title="Category")
+
 plt.show()
 ```
 
